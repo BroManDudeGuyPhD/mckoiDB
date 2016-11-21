@@ -1,21 +1,183 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+// Andrew Fossier
+// aaf8553
+// CMPS 360
+// Programming Project : 5
+// Due Date : 11/21/15
+// Program Description: Models a DB
+
+/* Certificate of Authenticity:   (Choose one of the two following forms:)
+ I certify that the code in the method functions including method function main of this 
+ project are entirely my own work. 
  */
 package mckoidb;
 
-/**
- *
- * @author aaf8553
- */
+import java.sql.*;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class MckoiDB {
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        // TODO code application logic here
+    public static void main(String[] args){
+
+        try {
+            
+            try {
+                Class.forName("com.mckoi.JDBCDriver").newInstance();
+            } catch (Exception e) {
+                System.out.println("Cannot register driver: " + e);
+                return;
+            }
+            
+            Connection connection;
+            try {
+                connection
+                        = DriverManager.getConnection("url", "admin", "adminPw");
+            } catch (SQLException e) {
+                System.out.println("cannot connect to database: " + e);
+                return;
+            }
+            
+            Statement statement = null;
+            try {
+                statement = connection.createStatement();
+            } catch (SQLException ex) {
+                Logger.getLogger(MckoiDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            ResultSet result;
+            
+            // create a Student table
+            statement.executeQuery(
+                    "CREATE TABLE Student "
+                            + "(id INTEGER, name VARCHAR(25), majorId INTEGER)"
+            );
+            
+            
+            // insert records into Student table
+            statement.executeQuery(
+                    "INSERT INTO Student(id, name, majorId) VALUES "
+                            + "(9, 'Fred Flintstone', 1)"
+            );
+            
+            Scanner in = new Scanner(System.in);
+            
+            int choice = 1;
+            String studentID;
+            while (choice != 0) {
+                System.out.println("------------------ MENU ------------------");
+                
+                choice = in.nextInt();
+                
+                if (choice == 1) {
+                    //List all courses
+                    System.out.println("============= LIST ALL Submenu ============= ");
+                    System.out.print("Choice: ");
+                    int subChoice = in.nextInt();
+                    
+                    if (subChoice == 1) {
+                        //List all courses in the database with course ids
+                        result = statement.executeQuery(
+                                "SELECT courseId, courseDesc FROM Course"
+                        );
+                        
+                        while(result.next()) {
+                            System.out.println(
+                                    result.getString(1) + " :: " +
+                                    result.getString(2) + "\n");
+                        }
+                    }
+                    
+                    if (subChoice == 2) {
+                        //List all majors in the database with major ids
+                        result = statement.executeQuery(
+                                "SELECT majorId, majorDesc FROM Major"
+                        );
+                        
+                        System.out.println("MajorID :: Major Description");
+                        while(result.next()) {
+                            System.out.println(
+                                    result.getString(1) + " :: " +
+                                    result.getString(2) + "\n");
+                        }
+                    }
+                    
+                    if (subChoice == 3) {
+                        //List all students with a given major; the user is shown a list of majors with ids and then enters the major id for the students to be displayed
+                        
+                        result = statement.executeQuery(
+                                "SELECT majorId, majorDesc FROM Major"
+                        );
+                        
+                        System.out.println("MajorID :: Major Description");
+                        
+                        while(result.next()) {
+                            System.out.println(
+                                    result.getString(1) + " :: " +
+                                    result.getString(2) + "\n");
+                        }
+                        
+                        System.out.println("Selection: ");
+                        String selection = in.nextLine();
+                        
+                        result = statement.executeQuery(
+                                "SELECT Student.name FROM Student, Major WHERE Student.majorID="+selection
+                        );
+                    }
+                    
+                    if (subChoice == 4) {
+                        //List all students in a course  in the database; the user is shown a list of courses with ids and then enters the course id for the list of students to be displayed
+                        
+                        result = statement.executeQuery(
+                                "SELECT courseId, courseDesc FROM Course"
+                        );
+                        System.out.println("CourseID :: Course Description");
+                        
+                        while(result.next()) {
+                            System.out.println(
+                                    result.getString(1) + " :: " +
+                                    result.getString(2) + "\n");
+                        }
+                        
+                        
+                        System.out.println("Selection: ");
+                        String selection = in.nextLine();
+                        result = statement.executeQuery(
+                                "SELECT Student.name FROM Student, Enrolled WHERE Student.id=Enrolled.id AND Enrolled.courseId="+selection
+                        );
+                    }
+                }
+                
+                
+                
+                if (choice == 2) {
+                    System.out.print("Enter Student ID: ");
+                    studentID = in.nextLine();
+                    
+                    System.out.println("Schedule for Student "+studentID+": " );
+                    //list schedule and student info
+                    result = statement.executeQuery(
+                                "SELECT Course.courseDesc FROM Course, Enrolled WHERE "+studentID+"=Enrolled.id AND Enrolled.courseId=Course.courseId "
+                        );
+                    
+                    
+                //SELECT Student.name, Major.majorDesc, Address.street, Address.city, Address.state, Address.zip 
+                //FROM Student, Major, Address WHERE Student.id= STUDENTIDVARIABLE AND Student.id=Address.id AND Student.majorId=Major.majorId
+                }
+                
+                if (choice == 3) {
+                    //add new student, add new course, add new major
+                }
+                
+                if (choice == 4) {
+                    //enroll a student in a course in the database; the user is shown a list of course names with course ids, then can enroll a student by entering the course id and the student id
+                }
+                
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(MckoiDB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }
-    
+
 }
